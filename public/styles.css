@@ -670,4 +670,46 @@ body {
         margin: 10% auto;
         padding: 20px;
     }
+
+    /* Додайте ці стилі наприкінець файлу styles.css */
+
+    /* Стилі для завершених завдань */
+    .task-completed {
+        background-color: #f7fafc !important;
+        border-color: #e2e8f0 !important;
+    }
+
+    .task-completed .task-info h4 {
+        text-decoration: line-through;
+        opacity: 0.6;
+    }
+
+    .task-completed .task-info p,
+    .task-completed .task-info small {
+        opacity: 0.6;
+    }
+
+    /* Стиль для кнопки "Завершити" */
+    .btn-success {
+        background: #38a169;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #2f855a;
+        transform: translateY(-2px);
+    }
+
+    /* Стилі для неактивних кнопок */
+    .btn:disabled {
+        background: #a0aec0 !important;
+        color: #718096 !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+    }
+
+    .btn:disabled:hover {
+        background: #a0aec0 !important;
+        transform: none !important;
+    }
 }

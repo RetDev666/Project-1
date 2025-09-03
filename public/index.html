@@ -218,15 +218,15 @@
             <form id="task-form">
                 <div class="form-group">
                     <label for="task-title">Назва:</label>
-                    <input type="text" id="task-title" required>
+                    <input type="text" id="task-title" name="task-title" required>
                 </div>
                 <div class="form-group">
                     <label for="task-description">Опис:</label>
-                    <textarea id="task-description"></textarea>
+                    <textarea id="task-description" name="task-description"></textarea>
                 </div>
                 <div class="form-group">
                     <label for="task-priority">Пріоритет:</label>
-                    <select id="task-priority">
+                    <select id="task-priority" name="task-priority">
                         <option value="low">Низький</option>
                         <option value="medium" selected>Середній</option>
                         <option value="high">Високий</option>
@@ -234,7 +234,7 @@
                 </div>
                 <div class="form-group">
                     <label for="task-deadline">Дедлайн:</label>
-                    <input type="datetime-local" id="task-deadline">
+                    <input type="datetime-local" id="task-deadline" name="task-deadline">
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Зберегти</button>
