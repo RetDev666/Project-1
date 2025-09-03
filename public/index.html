@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тайм-менеджер - Управління особистим часом</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-clock"></i> Тайм-менеджер</h1>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="dashboard">Головна</button>
+                <button class="nav-btn" data-tab="tasks">Завдання</button>
+                <button class="nav-btn" data-tab="pomodoro">Помодоро</button>
+                <button class="nav-btn" data-tab="tracking">Трекінг</button>
+                <button class="nav-btn" data-tab="analytics">Аналітика</button>
+                <button class="nav-btn" data-tab="settings">Налаштування</button>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>Сьогоднішні завдання</h3>
+                        <div id="today-tasks" class="task-list"></div>
+                    </div>
+                    <div class="card">
+                        <h3>Помодоро таймер</h3>
+                        <div class="pomodoro-widget">
+                            <div class="timer-display">
+                                <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                            </div>
+                            <div class="timer-controls">
+                                <button id="start-timer" class="btn btn-primary">Старт</button>
+                                <button id="pause-timer" class="btn btn-secondary">Пауза</button>
+                                <button id="reset-timer" class="btn btn-danger">Скинути</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Активний трекінг</h3>
+                        <div id="active-tracking" class="tracking-widget">
+                            <div id="no-tracking" class="no-data">Немає активного трекінгу</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Швидка статистика</h3>
+                        <div id="quick-stats" class="stats-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Tab -->
+            <div id="tasks" class="tab-content">
+                <div class="tab-header">
+                    <h2>Управління завданнями</h2>
+                    <button id="add-task-btn" class="btn btn-primary">Додати завдання</button>
+                </div>
+                <div class="tasks-container">
+                    <div class="filters">
+                        <select id="priority-filter">
+                            <option value="">Всі пріоритети</option>
+                            <option value="high">Високий</option>
+                            <option value="medium">Середній</option>
+                            <option value="low">Низький</option>
+                        </select>
+                        <select id="status-filter">
+                            <option value="">Всі статуси</option>
+                            <option value="pending">Очікує</option>
+                            <option value="in_progress">В роботі</option>
+                            <option value="completed">Завершено</option>
+                        </select>
+                    </div>
+                    <div id="tasks-list" class="tasks-list"></div>
+                </div>
+            </div>
+
+            <!-- Pomodoro Tab -->
+            <div id="pomodoro" class="tab-content">
+                <div class="pomodoro-container">
+                    <div class="pomodoro-timer">
+                        <div class="timer-circle">
+                            <div class="timer-text">
+                                <span id="pomodoro-minutes">25</span>:<span id="pomodoro-seconds">00</span>
+                            </div>
+                            <div class="timer-label">Помодоро</div>
+                        </div>
+                        <div class="timer-controls-large">
+                            <button id="pomodoro-start" class="btn btn-large btn-primary">Старт</button>
+                            <button id="pomodoro-pause" class="btn btn-large btn-secondary">Пауза</button>
+                            <button id="pomodoro-reset" class="btn btn-large btn-danger">Скинути</button>
+                        </div>
+                    </div>
+                    <div class="pomodoro-settings">
+                        <h3>Налаштування</h3>
+                        <div class="setting-group">
+                            <label>Тривалість роботи (хв):</label>
+                            <input type="number" id="work-duration" value="25" min="1" max="60">
+                        </div>
+                        <div class="setting-group">
+                            <label>Тривалість перерви (хв):</label>
+                            <input type="number" id="break-duration" value="5" min="1" max="30">
+                        </div>
+                        <div class="setting-group">
+                            <label>Довга перерва (хв):</label>
+                            <input type="number" id="long-break-duration" value="15" min="1" max="60">
+                        </div>
+                    </div>
+                    <div class="pomodoro-stats">
+                        <h3>Статистика</h3>
+                        <div id="pomodoro-stats" class="stats-display"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Tracking Tab -->
+            <div id="tracking" class="tab-content">
+                <div class="tracking-container">
+                    <div class="tracking-controls">
+                        <div class="tracking-input">
+                            <input type="text" id="activity-name" placeholder="Назва активності">
+                            <button id="start-tracking" class="btn btn-primary">Почати трекінг</button>
+                        </div>
+                    </div>
+                    <div class="tracking-lists">
+                        <div class="tracking-section">
+                            <h3>Активні трекінги</h3>
+                            <div id="active-trackings" class="tracking-list"></div>
+                        </div>
+                        <div class="tracking-section">
+                            <h3>Історія трекінгу</h3>
+                            <div id="tracking-history" class="tracking-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="analytics-container">
+                    <div class="analytics-header">
+                        <h2>Аналітика продуктивності</h2>
+                        <select id="analytics-period">
+                            <option value="day">День</option>
+                            <option value="week" selected>Тиждень</option>
+                            <option value="month">Місяць</option>
+                        </select>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="chart-card">
+                            <h3>Продуктивність завдань</h3>
+                            <canvas id="tasks-chart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Використання часу</h3>
+                            <canvas id="time-usage-chart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Сесії Помодоро</h3>
+                            <canvas id="pomodoro-chart"></canvas>
+                        </div>
+                        <div class="stats-card">
+                            <h3>Загальна статистика</h3>
+                            <div id="overview-stats" class="overview-stats"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3>Заблоковані сайти</h3>
+                        <div class="blocked-sites">
+                            <div class="add-site">
+                                <input type="text" id="site-url" placeholder="https://example.com">
+                                <button id="add-site-btn" class="btn btn-primary">Додати</button>
+                            </div>
+                            <div id="blocked-sites-list" class="sites-list"></div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Нагадування</h3>
+                        <div class="reminders">
+                            <div class="add-reminder">
+                                <input type="text" id="reminder-title" placeholder="Назва нагадування">
+                                <input type="text" id="reminder-message" placeholder="Повідомлення">
+                                <select id="reminder-type">
+                                    <option value="break">Перерва</option>
+                                    <option value="exercise">Вправи для очей</option>
+                                    <option value="custom">Користувацьке</option>
+                                </select>
+                                <input type="number" id="reminder-interval" placeholder="Інтервал (хв)" value="30">
+                                <button id="add-reminder-btn" class="btn btn-primary">Додати</button>
+                            </div>
+                            <div id="reminders-list" class="reminders-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Додати завдання</h2>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-title">Назва:</label>
+                    <input type="text" id="task-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Опис:</label>
+                    <textarea id="task-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-priority">Пріоритет:</label>
+                    <select id="task-priority">
+                        <option value="low">Низький</option>
+                        <option value="medium" selected>Середній</option>
+                        <option value="high">Високий</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-deadline">Дедлайн:</label>
+                    <input type="datetime-local" id="task-deadline">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Зберегти</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('task-modal')">Скасувати</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
