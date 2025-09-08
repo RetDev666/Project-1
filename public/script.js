@@ -59,6 +59,29 @@ function setupEventListeners() {
     document.getElementById('analytics-period').addEventListener('change', loadAnalytics);
 }
 
+// API функції
+async function apiCall(endpoint, options = {}) {
+    try {
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            ...options
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        showNotification('Помилка зєднання з сервером', 'error');
+        throw error;
+    }
+}
+
 // Переключення між вкладками
 function switchTab(tabName) {
     // Приховуємо всі вкладки
@@ -100,29 +123,6 @@ function switchTab(tabName) {
             loadBlockedSites();
             loadReminders();
             break;
-    }
-}
-
-// API функції
-async function apiCall(endpoint, options = {}) {
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            ...options
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('API Error:', error);
-        showNotification('Помилка зєднання з сервером', 'error');
-        throw error;
     }
 }
 
@@ -170,26 +170,21 @@ function displayTodayTasks(tasks) {
 }
 
 // Відображення швидкої статистики
-// Замініть функцію displayOverviewStats у script.js:
-function displayOverviewStats(data) {
-    const container = document.getElementById('overview-stats');
+function displayQuickStats(stats) {
+    const container = document.getElementById('quick-stats');
 
-    if (!container) {
-        console.log('Overview stats container not found');
+    console.log('Displaying quick stats:', stats); // Діагностика
+
+    // Перевіряємо, чи дані існують
+    if (!stats || !stats.tasks) {
+        console.log('No stats data available');
+        container.innerHTML = '<div class="no-data">Немає даних статистики</div>';
         return;
     }
 
-    console.log('Displaying overview stats:', data); // Діагностика
-
-    if (!data || !data.tasks) {
-        console.log('No overview data available');
-        container.innerHTML = '<div class="no-data">Немає даних для відображення</div>';
-        return;
-    }
-
-    const tasks = data.tasks || {};
-    const pomodoro = data.pomodoro || {};
-    const timeTracking = data.timeTracking || {};
+    const tasks = stats.tasks || {};
+    const pomodoro = stats.pomodoro || {};
+    const timeTracking = stats.timeTracking || {};
 
     container.innerHTML = `
         <div class="stat-item">
@@ -210,7 +205,17 @@ function displayOverviewStats(data) {
         </div>
     `;
 
-    console.log('Overview stats HTML updated, total tasks:', parseInt(tasks.total_tasks), 'completed:', parseInt(tasks.completed_tasks));
+    console.log('Quick stats HTML updated');
+}
+
+// Завантаження завдань
+async function loadTasks() {
+    try {
+        const tasks = await apiCall('/tasks');
+        displayTasks(tasks);
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
 }
 
 // Відображення завдань
@@ -239,7 +244,6 @@ function displayTasks(tasks) {
         </div>
     `).join('');
 }
-
 
 // Фільтрація завдань
 function filterTasks() {
@@ -354,6 +358,7 @@ async function deleteTask(taskId) {
     }
 }
 
+// Завершення завдання
 async function completeTask(taskId) {
     try {
         console.log('Starting completeTask for ID:', taskId);
@@ -595,11 +600,25 @@ function displayActiveTracking(trackings) {
     `).join('');
 }
 
-// Виправлення функції відображення активного трекінгу для трекінг сторінки
+async function loadTimeTracking() {
+    try {
+        const [activeTrackings, history] = await Promise.all([
+            apiCall('/time-tracking/active'),
+            apiCall('/time-tracking/history')
+        ]);
+
+        displayActiveTracking(activeTrackings);
+        displayActiveTrackingPage(activeTrackings);
+        displayTrackingHistory(history);
+    } catch (error) {
+        console.error('Error loading time tracking:', error);
+    }
+}
+
 function displayActiveTrackingPage(trackings) {
     const container = document.getElementById('active-trackings');
 
-    if (!container) return; // Елемент не існує на поточній сторінці
+    if (!container) return;
 
     if (trackings.length === 0) {
         container.innerHTML = '<div class="no-data">Немає активних трекінгів</div>';
@@ -618,28 +637,10 @@ function displayActiveTrackingPage(trackings) {
     `).join('');
 }
 
-async function loadTimeTracking() {
-    try {
-        const [activeTrackings, history] = await Promise.all([
-            apiCall('/time-tracking/active'),
-            apiCall('/time-tracking/history')
-        ]);
-
-        // Для головної сторінки (dashboard)
-        displayActiveTracking(activeTrackings);
-
-        // Для сторінки трекінгу
-        displayActiveTrackingPage(activeTrackings);
-        displayTrackingHistory(history);
-    } catch (error) {
-        console.error('Error loading time tracking:', error);
-    }
-}
-
 function displayTrackingHistory(history) {
     const container = document.getElementById('tracking-history');
 
-    if (!container) return; // Елемент не існує на поточній сторінці
+    if (!container) return;
 
     if (history.length === 0) {
         container.innerHTML = '<div class="no-data">Немає історії трекінгу</div>';
@@ -660,24 +661,10 @@ function displayTrackingHistory(history) {
     `).join('');
 }
 
-// Перевірка та обробка помилок Chart.js
-function createChartsIfElementsExist() {
-    // Перевіряємо чи елементи для графіків існують перед створенням
-    const tasksChart = document.getElementById('tasks-chart');
-    const timeUsageChart = document.getElementById('time-usage-chart');
-    const pomodoroChart = document.getElementById('pomodoro-chart');
-
-    if (!tasksChart || !timeUsageChart || !pomodoroChart) {
-        console.log('Chart elements not found on current page');
-        return false;
-    }
-    return true;
-}
-
 // Аналітика
 async function loadAnalytics() {
     if (!createChartsIfElementsExist()) {
-        return; // Елементи графіків не знайдені
+        return;
     }
 
     const period = document.getElementById('analytics-period').value;
@@ -699,175 +686,18 @@ async function loadAnalytics() {
     }
 }
 
-function createTasksChart(data) {
-    const ctx = document.getElementById('tasks-chart').getContext('2d');
+function createChartsIfElementsExist() {
+    const tasksChart = document.getElementById('tasks-chart');
+    const timeUsageChart = document.getElementById('time-usage-chart');
+    const pomodoroChart = document.getElementById('pomodoro-chart');
 
-    if (charts.tasks) {
-        charts.tasks.destroy();
+    if (!tasksChart || !timeUsageChart || !pomodoroChart) {
+        console.log('Chart elements not found on current page');
+        return false;
     }
-
-    charts.tasks = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.map(item => new Date(item.date).toLocaleDateString()),
-            datasets: [{
-                label: 'Завершено завдань',
-                data: data.map(item => item.completed_tasks),
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            }
-        }
-    });
+    return true;
 }
 
-function createTimeUsageChart(data) {
-    const ctx = document.getElementById('time-usage-chart').getContext('2d');
-
-    if (charts.timeUsage) {
-        charts.timeUsage.destroy();
-    }
-
-    charts.timeUsage = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: data.map(item => item.activity_name),
-            datasets: [{
-                data: data.map(item => item.total_minutes),
-                backgroundColor: [
-                    '#667eea',
-                    '#764ba2',
-                    '#f093fb',
-                    '#f5576c',
-                    '#4facfe',
-                    '#00f2fe'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            }
-        }
-    });
-}
-
-function createPomodoroChart(data) {
-    const ctx = document.getElementById('pomodoro-chart').getContext('2d');
-
-    if (charts.pomodoro) {
-        charts.pomodoro.destroy();
-    }
-
-    charts.pomodoro = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Загальні сесії', 'Завершені сесії'],
-            datasets: [{
-                label: 'Кількість',
-                data: [data.pomodoro?.total_sessions || 0, data.pomodoro?.completed_sessions || 0],
-                backgroundColor: ['#667eea', '#38a169']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-}
-
-// Замініть функцію displayOverviewStats у script.js:
-function displayOverviewStats(data) {
-    const container = document.getElementById('overview-stats');
-
-    if (!container) {
-        console.log('Overview stats container not found');
-        return;
-    }
-
-    console.log('Displaying overview stats:', data); // Діагностика
-
-    if (!data || !data.tasks) {
-        console.log('No overview data available');
-        container.innerHTML = '<div class="no-data">Немає даних для відображення</div>';
-        return;
-    }
-
-    const tasks = data.tasks || {};
-    const pomodoro = data.pomodoro || {};
-    const timeTracking = data.timeTracking || {};
-
-    container.innerHTML = `
-        <div class="stat-item">
-            <div class="stat-value">${parseInt(tasks.total_tasks) || 0}</div>
-            <div class="stat-label">Всього завдань</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">${parseInt(tasks.completed_tasks) || 0}</div>
-            <div class="stat-label">Завершено</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">${parseInt(pomodoro.completed_sessions) || 0}</div>
-            <div class="stat-label">Сесій Помодоро</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-value">${Math.round((parseInt(timeTracking.total_minutes) || 0) / 60)}</div>
-            <div class="stat-label">Годин трекінгу</div>
-        </div>
-    `;
-
-    console.log('Overview stats HTML updated, total tasks:', parseInt(tasks.total_tasks), 'completed:', parseInt(tasks.completed_tasks));
-}
-
-// Налаштування
-async function loadBlockedSites() {
-    try {
-        const sites = await apiCall('/blocked-sites');
-        displayBlockedSites(sites);
-    } catch (error) {
-        console.error('Error loading blocked sites:', error);
-    }
-}
-
-function debugCharts() {
-    console.log('=== CHART DEBUG ===');
-    console.log('Chart.js available:', typeof Chart !== 'undefined');
-
-    const elements = [
-        'tasks-chart',
-        'time-usage-chart',
-        'pomodoro-chart',
-        'overview-stats'
-    ];
-
-    elements.forEach(id => {
-        const element = document.getElementById(id);
-        console.log(`Element ${id}:`, element ? 'EXISTS' : 'NOT FOUND');
-        if (element) {
-            console.log(`  - Visible:`, element.offsetWidth > 0 && element.offsetHeight > 0);
-        }
-    });
-
-    console.log('Current charts:', charts);
-    console.log('=== END DEBUG ===');
-}
-
-// Виправлена функція createTasksChart:
 function createTasksChart(data) {
     console.log('Creating tasks chart with data:', data);
 
@@ -877,7 +707,6 @@ function createTasksChart(data) {
         return;
     }
 
-    // Перевіряємо чи Chart.js доступний
     if (typeof Chart === 'undefined') {
         console.error('Chart.js not loaded');
         return;
@@ -887,7 +716,6 @@ function createTasksChart(data) {
         charts.tasks.destroy();
     }
 
-    // Якщо даних немає, створюємо порожній графік
     if (!data || data.length === 0) {
         data = [{
             date: new Date().toISOString().split('T')[0],
@@ -926,6 +754,120 @@ function createTasksChart(data) {
         console.log('Tasks chart created successfully');
     } catch (error) {
         console.error('Error creating tasks chart:', error);
+    }
+}
+
+function createTimeUsageChart(data) {
+    const ctx = document.getElementById('time-usage-chart');
+
+    if (charts.timeUsage) {
+        charts.timeUsage.destroy();
+    }
+
+    charts.timeUsage = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(item => item.activity_name),
+            datasets: [{
+                data: data.map(item => item.total_minutes),
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#f093fb',
+                    '#f5576c',
+                    '#4facfe',
+                    '#00f2fe'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+function createPomodoroChart(data) {
+    const ctx = document.getElementById('pomodoro-chart');
+
+    if (charts.pomodoro) {
+        charts.pomodoro.destroy();
+    }
+
+    charts.pomodoro = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Загальні сесії', 'Завершені сесії'],
+            datasets: [{
+                label: 'Кількість',
+                data: [data.pomodoro?.total_sessions || 0, data.pomodoro?.completed_sessions || 0],
+                backgroundColor: ['#667eea', '#38a169']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function displayOverviewStats(data) {
+    const container = document.getElementById('overview-stats');
+
+    if (!container) {
+        console.log('Overview stats container not found');
+        return;
+    }
+
+    console.log('Displaying overview stats:', data);
+
+    if (!data || !data.tasks) {
+        console.log('No overview data available');
+        container.innerHTML = '<div class="no-data">Немає даних для відображення</div>';
+        return;
+    }
+
+    const tasks = data.tasks || {};
+    const pomodoro = data.pomodoro || {};
+    const timeTracking = data.timeTracking || {};
+
+    container.innerHTML = `
+        <div class="stat-item">
+            <div class="stat-value">${parseInt(tasks.total_tasks) || 0}</div>
+            <div class="stat-label">Всього завдань</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${parseInt(tasks.completed_tasks) || 0}</div>
+            <div class="stat-label">Завершено</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${parseInt(pomodoro.completed_sessions) || 0}</div>
+            <div class="stat-label">Сесій Помодоро</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">${Math.round((parseInt(timeTracking.total_minutes) || 0) / 60)}</div>
+            <div class="stat-label">Годин трекінгу</div>
+        </div>
+    `;
+
+    console.log('Overview stats HTML updated');
+}
+
+// Налаштування
+async function loadBlockedSites() {
+    try {
+        const sites = await apiCall('/blocked-sites');
+        displayBlockedSites(sites);
+    } catch (error) {
+        console.error('Error loading blocked sites:', error);
     }
 }
 
@@ -1053,33 +995,6 @@ async function removeReminder(reminderId) {
     }
 }
 
-// Функція для оновлення статусу завдання
-async function updateTaskStatus(taskId, newStatus) {
-    try {
-        const tasks = await apiCall('/tasks');
-        const task = tasks.find(t => t.id === taskId);
-
-        if (!task) return;
-
-        const updatedTask = {
-            ...task,
-            status: newStatus
-        };
-
-        await apiCall(`/tasks/${taskId}`, {
-            method: 'PUT',
-            body: JSON.stringify(updatedTask)
-        });
-
-        loadTasks();
-        loadDashboardData();
-        showNotification(`Статус завдання оновлено на "${newStatus}"`, 'success');
-    } catch (error) {
-        console.error('Error updating task status:', error);
-        showNotification('Помилка оновлення статусу', 'error');
-    }
-}
-
 // Утилітарні функції
 function openModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
@@ -1105,12 +1020,10 @@ function getPriorityText(priority) {
 }
 
 function showNotification(message, type = 'info') {
-    // Створюємо повідомлення
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
 
-    // Додаємо стилі
     notification.style.cssText = `
         position: fixed;
         top: 20px;
@@ -1126,7 +1039,6 @@ function showNotification(message, type = 'info') {
 
     document.body.appendChild(notification);
 
-    // Видаляємо через 3 секунди
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
@@ -1138,7 +1050,6 @@ function showNotification(message, type = 'info') {
 }
 
 function playNotificationSound() {
-    // Створюємо звук сповіщення
     const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
     audio.play().catch(() => {
         // Ігноруємо помилки автопрокрутки
@@ -1170,4 +1081,4 @@ setInterval(async () => {
     } catch (error) {
         console.error('Error checking reminders:', error);
     }
-}, 60000); // Перевіряємо кожну хвилину
+}, 60000);
