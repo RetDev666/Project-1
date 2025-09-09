@@ -5,253 +5,568 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Тайм-менеджер</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="container">
-    <!-- Header -->
-    <header class="header">
-        <h1>Тайм-менеджер</h1>
-        <nav class="nav">
-            <button class="nav-btn active" data-tab="dashboard"><span>Головна</span></button>
-            <button class="nav-btn" data-tab="tasks"><span>Завдання</span></button>
-            <button class="nav-btn" data-tab="pomodoro"><span>Помодоро</span></button>
-            <button class="nav-btn" data-tab="tracking"><span>Трекінг</span></button>
-            <button class="nav-btn" data-tab="analytics"><span>Аналітика</span></button>
-            <button class="nav-btn" data-tab="settings"><span>Налаштування</span></button>
-        </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <div class="tab-header" data-bg-text="01">
-                <h2>Дашборд</h2>
-            </div>
-            <div class="dashboard-grid">
-                <div class="card">
-                    <h3>Сьогоднішні завдання</h3>
-                    <div id="today-tasks" class="task-list"></div>
+    <!-- Dashboard Tab -->
+    <div id="dashboard" class="tab-content active">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <div class="greeting">Привіт, Сара 👋</div>
+                <div class="profile-icon">
+                    <i class="fas fa-bell"></i>
                 </div>
-                <div class="card">
-                    <h3>Помодоро таймер</h3>
-                    <div class="pomodoro-widget">
-                        <div class="timer-display">
-                            <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+            </div>
+            <div class="subtitle">Готові до сьогоднішніх завдань?</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Mode Indicator -->
+            <div class="mode-indicator" id="mode-indicator">Locked In Mode</div>
+
+            <!-- Timer Display -->
+            <div class="timer-display-large">
+                <div class="timer-text-large">
+                    <span id="timer-hours">00</span>:<span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                </div>
+                <div class="timer-controls-main">
+                    <button class="btn-timer" id="pause-btn">Пауза</button>
+                    <button class="btn-timer" id="cancel-btn">Скасувати</button>
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div class="tasks-header">
+                <div class="tasks-title">Сьогоднішні завдання</div>
+                <div class="progress-indicator">
+                    <button class="progress-button active">День</button>
+                    <button class="progress-button">Тиждень</button>
+                    <button class="progress-button">Місяць</button>
+                </div>
+            </div>
+
+            <div class="task-list" id="today-task-list">
+                <div class="task-item-mobile">
+                    <div class="task-checkbox completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-name completed">Покормити кота</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 7:30
                         </div>
-                        <div class="timer-controls">
-                            <button id="start-timer" class="btn btn-primary"><span>Старт</span></button>
-                            <button id="pause-timer" class="btn btn-primary"><span>Пауза</span></button>
-                            <button id="reset-timer" class="btn btn-danger"><span>Скинути</span></button>
+                    </div>
+                </div>
+
+                <div class="task-item-mobile">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">Полити рослини</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 8:30
                         </div>
                     </div>
                 </div>
-                <div class="card">
-                    <h3>Активний трекінг</h3>
-                    <div id="active-tracking" class="tracking-widget">
-                        <div id="no-tracking" class="no-data">Немає активного трекінгу</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>Швидка статистика</h3>
-                    <div id="quick-stats" class="stats-grid"></div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tasks Tab -->
-        <div id="tasks" class="tab-content">
-            <div class="tab-header" data-bg-text="02">
-                <h2>Завдання</h2>
-                <button id="add-task-btn" class="btn btn-primary"><span>Додати завдання</span></button>
-            </div>
-            <div class="tasks-container">
-                <div class="filters">
-                    <select id="priority-filter">
-                        <option value="">Всі пріоритети</option>
-                        <option value="high">Високий</option>
-                        <option value="medium">Середній</option>
-                        <option value="low">Низький</option>
-                    </select>
-                    <select id="status-filter">
-                        <option value="">Всі статуси</option>
-                        <option value="pending">Очікує</option>
-                        <option value="in_progress">В роботі</option>
-                        <option value="completed">Завершено</option>
-                    </select>
-                </div>
-                <div id="tasks-list" class="tasks-list"></div>
-            </div>
-        </div>
-
-        <!-- Pomodoro Tab -->
-        <div id="pomodoro" class="tab-content">
-            <div class="tab-header" data-bg-text="03">
-                <h2>Помодоро</h2>
-            </div>
-            <div class="pomodoro-container">
-                <div class="pomodoro-timer">
-                    <div class="timer-circle">
-                        <div class="timer-text">
-                            <span id="pomodoro-minutes">25</span>:<span id="pomodoro-seconds">00</span>
+                <div class="task-item-mobile">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">Зустріч</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 14:30
                         </div>
-                        <div class="timer-label">Помодоро</div>
-                    </div>
-                    <div class="timer-controls-large">
-                        <button id="pomodoro-start" class="btn btn-primary"><span>Старт</span></button>
-                        <button id="pomodoro-pause" class="btn"><span>Пауза</span></button>
-                        <button id="pomodoro-reset" class="btn btn-danger"><span>Скинути</span></button>
                     </div>
                 </div>
-                <div class="pomodoro-settings">
-                    <h3>Налаштування</h3>
-                    <div class="setting-group">
-                        <label>Тривалість роботи (хв):</label>
-                        <input type="number" id="work-duration" value="25" min="1" max="60">
-                    </div>
-                    <div class="setting-group">
-                        <label>Тривалість перерви (хв):</label>
-                        <input type="number" id="break-duration" value="5" min="1" max="30">
-                    </div>
-                    <div class="setting-group">
-                        <label>Довга перерва (хв):</label>
-                        <input type="number" id="long-break-duration" value="15" min="1" max="60">
-                    </div>
-                    <div class="pomodoro-stats">
-                        <h3>Статистика</h3>
-                        <div id="pomodoro-stats" class="stats-grid"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Time Tracking Tab -->
-        <div id="tracking" class="tab-content">
-            <div class="tab-header" data-bg-text="04">
-                <h2>Трекінг</h2>
-            </div>
-            <div class="tracking-container">
-                <div class="tracking-controls">
-                    <div class="tracking-input">
-                        <input type="text" id="activity-name" placeholder="Назва активності">
-                        <button id="start-tracking" class="btn btn-primary"><span>Почати трекінг</span></button>
-                    </div>
-                </div>
-                <div class="tracking-lists">
-                    <div class="tracking-section">
-                        <h3>Активні трекінги</h3>
-                        <div id="active-trackings" class="tracking-list"></div>
-                    </div>
-                    <div class="tracking-section">
-                        <h3>Історія трекінгу</h3>
-                        <div id="tracking-history" class="tracking-list"></div>
+                <div class="task-item-mobile">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-name">Помити посуд</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 16:30
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+    </div>
 
-        <!-- Analytics Tab -->
-        <div id="analytics" class="tab-content">
-            <div class="tab-header" data-bg-text="05">
-                <h2>Аналітика</h2>
-                <select id="analytics-period">
-                    <option value="day">День</option>
-                    <option value="week" selected>Тиждень</option>
-                    <option value="month">Місяць</option>
-                </select>
+    <!-- Tasks Tab -->
+    <div id="tasks" class="tab-content">
+        <header class="page-header">
+            <div class="page-title">Сьогоднішні завдання</div>
+            <div class="page-subtitle">Керуйте своїми завданнями</div>
+        </header>
+
+        <main class="main-content">
+            <!-- Search -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Пошук завдань..." id="search-tasks">
             </div>
+
+            <!-- Filter Buttons -->
+            <div class="tasks-header">
+                <div class="progress-indicator">
+                    <button class="progress-button active" data-filter="all">Завдання</button>
+                    <button class="progress-button" data-filter="completed">Пошук</button>
+                    <button class="progress-button" data-filter="pending">Модель</button>
+                </div>
+            </div>
+
+            <div class="task-list" id="all-tasks-list">
+                <div class="task-item-mobile">
+                    <div class="task-checkbox completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-name completed">Побудувати котл</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 7:30
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-item-mobile">
+                    <div class="task-checkbox completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-name completed">Полити рослини</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 8:30
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-item-mobile">
+                    <div class="task-checkbox completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-name completed">Зустріч</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 14:30
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-item-mobile">
+                    <div class="task-checkbox completed">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-name completed">Помити посуд</div>
+                        <div class="task-time">
+                            <i class="far fa-clock"></i> 16:30
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Calendar Tab -->
+    <div id="calendar" class="tab-content">
+        <header class="page-header">
+            <div class="page-title">Календар</div>
+            <div class="page-subtitle">Плануйте свої завдання</div>
+        </header>
+
+        <main class="main-content">
+            <div class="calendar-container">
+                <!-- Calendar Header -->
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button class="calendar-nav-btn" id="prev-month">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="calendar-month" id="current-month">Грудень 2024</div>
+                        <button class="calendar-nav-btn" id="next-month">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Day headers -->
+                    <div class="calendar-day-header">Пн</div>
+                    <div class="calendar-day-header">Вт</div>
+                    <div class="calendar-day-header">Ср</div>
+                    <div class="calendar-day-header">Чт</div>
+                    <div class="calendar-day-header">Пт</div>
+                    <div class="calendar-day-header">Сб</div>
+                    <div class="calendar-day-header">Нд</div>
+
+                    <!-- Calendar days will be generated by JavaScript -->
+                </div>
+
+                <!-- Events for selected day -->
+                <div class="calendar-events">
+                    <div class="events-header">
+                        <div class="events-title">Події на <span id="selected-date">сьогодні</span></div>
+                        <button class="btn-add-event" id="add-event-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="day-events">
+                        <div class="event-item">
+                            <div class="event-time">09:00</div>
+                            <div class="event-title">Ранкова зарядка</div>
+                            <button class="event-delete" onclick="deleteEvent(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="event-item">
+                            <div class="event-time">14:30</div>
+                            <div class="event-title">Зустріч з командою</div>
+                            <button class="event-delete" onclick="deleteEvent(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analytics" class="tab-content">
+        <header class="page-header">
+            <div class="page-title">Аналітика</div>
+            <div class="page-subtitle">Ваша продуктивність</div>
+        </header>
+
+        <main class="main-content">
             <div class="analytics-container">
-                <div class="analytics-grid">
-                    <div class="chart-card">
-                        <h3>Продуктивність завдань</h3>
-                        <canvas id="tasks-chart"></canvas>
+                <!-- Quick Stats -->
+                <div class="analytics-stats">
+                    <div class="analytics-stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="total-tasks-stat">0</div>
+                            <div class="stat-label">Всього завдань</div>
+                        </div>
                     </div>
-                    <div class="chart-card">
-                        <h3>Використання часу</h3>
-                        <canvas id="time-usage-chart"></canvas>
+                    <div class="analytics-stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="completed-tasks-stat">0</div>
+                            <div class="stat-label">Виконано</div>
+                        </div>
                     </div>
-                    <div class="chart-card">
-                        <h3>Сесії Помодоро</h3>
-                        <canvas id="pomodoro-chart"></canvas>
+                    <div class="analytics-stat-card">
+                        <div class="stat-icon">🍅</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="pomodoro-sessions-stat">0</div>
+                            <div class="stat-label">Помодоро</div>
+                        </div>
                     </div>
-                    <div class="stats-card">
-                        <h3>Загальна статистика</h3>
-                        <div id="overview-stats" class="stats-grid"></div>
+                    <div class="analytics-stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="streak-stat">0</div>
+                            <div class="stat-label">Днів підряд</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Settings Tab -->
-        <div id="settings" class="tab-content">
-            <div class="tab-header" data-bg-text="06">
-                <h2>Налаштування</h2>
-            </div>
-            <div class="settings-container">
-                <div class="settings-section">
-                    <h3>Заблоковані сайти</h3>
-                    <div class="blocked-sites">
-                        <div class="add-site">
-                            <input type="text" id="site-url" placeholder="https://example.com">
-                            <button id="add-site-btn" class="btn btn-primary"><span>Додати</span></button>
-                        </div>
-                        <div id="blocked-sites-list" class="sites-list"></div>
-                    </div>
-                </div>
-                <div class="settings-section">
-                    <h3>Нагадування</h3>
-                    <div class="reminders">
-                        <div class="add-reminder">
-                            <input type="text" id="reminder-title" placeholder="Назва нагадування">
-                            <input type="text" id="reminder-message" placeholder="Повідомлення">
-                            <select id="reminder-type">
-                                <option value="break">Перерва</option>
-                                <option value="exercise">Вправи для очей</option>
-                                <option value="custom">Користувацьке</option>
+                <!-- Charts -->
+                <div class="analytics-charts">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Завдання по днях</h3>
+                            <select id="chart-period">
+                                <option value="week">Тиждень</option>
+                                <option value="month">Місяць</option>
                             </select>
-                            <input type="number" id="reminder-interval" placeholder="Інтервал (хв)" value="30">
-                            <button id="add-reminder-btn" class="btn btn-primary"><span>Додати</span></button>
                         </div>
-                        <div id="reminders-list" class="reminders-list"></div>
+                        <canvas id="tasks-analytics-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Продуктивність по годинах</h3>
+                        </div>
+                        <canvas id="productivity-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Розподіл завдань</h3>
+                        </div>
+                        <canvas id="tasks-distribution-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Помодоро статистика</h3>
+                        </div>
+                        <canvas id="pomodoro-analytics-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Weekly Progress -->
+                <div class="weekly-progress">
+                    <h3>Тижневий прогрес</h3>
+                    <div class="progress-grid" id="weekly-progress">
+                        <!-- Generated by JS -->
                     </div>
                 </div>
             </div>
+        </main>
+    </div>
+
+    <!-- Profile Tab -->
+    <div id="profile" class="tab-content">
+        <header class="page-header">
+            <div class="page-title">Профіль</div>
+            <div class="page-subtitle">Ваші налаштування та статистика</div>
+        </header>
+
+        <main class="main-content">
+            <div class="profile-container">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="profile-name" id="profile-name">Сара Іванова</div>
+                    <div class="profile-email" id="profile-email">sara.ivanova@email.com</div>
+                </div>
+
+                <!-- Profile Stats -->
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profile-tasks-count">47</div>
+                        <div class="profile-stat-label">Завдань</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profile-pomodoro-count">23</div>
+                        <div class="profile-stat-label">Помодоро</div>
+                    </div>
+                    <div class="profile-stat">
+                        <div class="profile-stat-value" id="profile-streak-count">15</div>
+                        <div class="profile-stat-label">Днів</div>
+                    </div>
+                </div>
+
+                <!-- Profile Menu -->
+                <div class="profile-menu">
+                    <button class="profile-menu-item" data-action="settings">
+                        <i class="fas fa-cog profile-menu-icon"></i>
+                        <span>Налаштування</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="profile-menu-item" data-action="notifications">
+                        <i class="fas fa-bell profile-menu-icon"></i>
+                        <span>Сповіщення</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="profile-menu-item" data-action="theme">
+                        <i class="fas fa-palette profile-menu-icon"></i>
+                        <span>Тема додатку</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="profile-menu-item" data-action="backup">
+                        <i class="fas fa-cloud-upload-alt profile-menu-icon"></i>
+                        <span>Резервна копія</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="profile-menu-item" data-action="export">
+                        <i class="fas fa-download profile-menu-icon"></i>
+                        <span>Експорт даних</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="profile-menu-item" data-action="help">
+                        <i class="fas fa-question-circle profile-menu-icon"></i>
+                        <span>Довідка</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="profile-menu-item" data-action="logout">
+                        <i class="fas fa-sign-out-alt profile-menu-icon"></i>
+                        <span>Вийти</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-tab="dashboard">
+            <div class="nav-icon">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="nav-label">Головна</div>
         </div>
-    </main>
+        <div class="nav-item" data-tab="tasks">
+            <div class="nav-icon">
+                <i class="fas fa-list-check"></i>
+            </div>
+            <div class="nav-label">Завдання</div>
+        </div>
+        <div class="nav-item" data-tab="calendar">
+            <div class="nav-icon">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <div class="nav-label">Календар</div>
+        </div>
+        <div class="nav-item" data-tab="analytics">
+            <div class="nav-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="nav-label">Аналітика</div>
+        </div>
+        <div class="nav-item" data-tab="profile">
+            <div class="nav-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="nav-label">Профіль</div>
+        </div>
+    </nav>
+
+    <!-- Add Task Button -->
+    <button class="add-task-btn" id="add-task-mobile">
+        <i class="fas fa-plus"></i>
+    </button>
 </div>
 
-<!-- Modals -->
+<!-- Task Modal -->
 <div id="task-modal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Додати завдання</h2>
+        <button class="close" onclick="closeModal('task-modal')">×</button>
+        <div class="modal-header">
+            <div class="modal-title">Нове завдання</div>
+        </div>
         <form id="task-form">
             <div class="form-group">
-                <label for="task-title">Назва:</label>
-                <input type="text" id="task-title" name="task-title" required>
+                <label class="form-label">Назва завдання</label>
+                <input type="text" id="task-title" class="form-input" required placeholder="Введіть назву завдання">
             </div>
             <div class="form-group">
-                <label for="task-description">Опис:</label>
-                <textarea id="task-description" name="task-description"></textarea>
+                <label class="form-label">Опис (необов'язково)</label>
+                <textarea id="task-description" class="form-input" rows="3" placeholder="Додайте опис завдання"></textarea>
             </div>
             <div class="form-group">
-                <label for="task-priority">Пріоритет:</label>
-                <select id="task-priority" name="task-priority">
+                <label class="form-label">Час виконання</label>
+                <input type="time" id="task-time" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Пріоритет</label>
+                <select id="task-priority" class="form-input">
                     <option value="low">Низький</option>
                     <option value="medium" selected>Середній</option>
                     <option value="high">Високий</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="task-deadline">Дедлайн:</label>
-                <input type="datetime-local" id="task-deadline" name="task-deadline">
-            </div>
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary"><span>Зберегти</span></button>
-                <button type="button" class="btn" onclick="closeModal('task-modal')"><span>Скасувати</span></button>
+                <button type="submit" class="btn-primary">Створити</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('task-modal')">Скасувати</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Event Modal -->
+<div id="event-modal" class="modal">
+    <div class="modal-content">
+        <button class="close" onclick="closeModal('event-modal')">×</button>
+        <div class="modal-header">
+            <div class="modal-title">Нова подія</div>
+        </div>
+        <form id="event-form">
+            <div class="form-group">
+                <label class="form-label">Назва події</label>
+                <input type="text" id="event-title" class="form-input" required placeholder="Введіть назву події">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Дата</label>
+                <input type="date" id="event-date" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Час початку</label>
+                <input type="time" id="event-time" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Тривалість (хвилин)</label>
+                <input type="number" id="event-duration" class="form-input" min="15" max="480" value="60">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Опис (необов'язково)</label>
+                <textarea id="event-description" class="form-input" rows="3" placeholder="Додайте опис події"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Створити</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('event-modal')">Скасувати</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+    <div class="modal-content modal-large">
+        <button class="close" onclick="closeModal('settings-modal')">×</button>
+        <div class="modal-header">
+            <div class="modal-title">Налаштування</div>
+        </div>
+        <div class="settings-content">
+            <div class="settings-section">
+                <h4>Профіль користувача</h4>
+                <div class="form-group">
+                    <label class="form-label">Ім'я</label>
+                    <input type="text" id="settings-name" class="form-input" value="Сара Іванова">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="settings-email" class="form-input" value="sara.ivanova@email.com">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Помодоро таймер</h4>
+                <div class="form-group">
+                    <label class="form-label">Тривалість роботи (хвилин)</label>
+                    <input type="number" id="settings-work-duration" class="form-input" value="25" min="1" max="60">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Коротка перерва (хвилин)</label>
+                    <input type="number" id="settings-short-break" class="form-input" value="5" min="1" max="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Довга перерва (хвилин)</label>
+                    <input type="number" id="settings-long-break" class="form-input" value="15" min="1" max="60">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Сповіщення</h4>
+                <div class="setting-toggle">
+                    <label class="form-label">Звукові сповіщення</label>
+                    <input type="checkbox" id="settings-sound" checked>
+                </div>
+                <div class="setting-toggle">
+                    <label class="form-label">Push сповіщення</label>
+                    <input type="checkbox" id="settings-push" checked>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn-primary" onclick="saveSettings()">Зберегти</button>
+            <button type="button" class="btn-secondary" onclick="closeModal('settings-modal')">Скасувати</button>
+        </div>
     </div>
 </div>
 
